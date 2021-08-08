@@ -10,6 +10,7 @@ Add more commands for AWS CLI by two separate ways.
 * [lambda getenv](#lambda-getenv)
 * [kinesis peek](#kinesis_peek)
 * [elbv2 describe\_target\_groups --load-balancer-name](#elbv2-describe_target_groups---load-balancer-name)
+* [elbv2 describe\_load\_balancer --load-balancer-name](#elbv2-describe_load_balancer---load-balancer-name)
 
 ## Quickstart
 
@@ -144,12 +145,23 @@ $ aws_runner kinesis peek --stream-name=your_stream_name --limit=10
 { .. message_fetched_from_the_kinesis_stream .. }
 ```
 
+#### elbv2 describe\_load\_balancer --load-balancer-name
+
+* Describes the specified load balancer by the name of a load balancer.
+* Arguments
+	* `--load-balancer-name`: The name of a load balancer
+
+```
+$ aws_runner describe_target_groups --load-balancer-name=your_lb_name
+
+{ "LoadBalancerArn": "...", "DNSName" : "...", .. }
+```
 
 #### elbv2 describe\_target\_groups --load-balancer-name
 
-* Describes the specified target groups by the name of load balancer.
+* Describes the specified target groups by the name of a load balancer.
 * Arguments
-	* `--load-balancer-name`: The name of the load balancer
+	* `--load-balancer-name`: The name of a load balancer
 
 ```
 $ aws_runner describe_target_groups --load-balancer-name=your_lb_name

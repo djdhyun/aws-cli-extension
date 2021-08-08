@@ -5,10 +5,10 @@ AWS_EXTENSIONS=(
     "lambda_getenv"
     "kinesis_peek"
     "elbv2_describe_target_groups"
+    "elbv2_describe_load_balancer"
 )
 
 function lambda_download() {
-    function_name=""
     for arg in "$@"; do
       case $arg in
         --function-name=*|--function=*)
@@ -25,7 +25,6 @@ function lambda_download() {
 }
 
 function lambda_getenv() {
-    function_name=""
     for arg in "$@"; do
       case $arg in
         --function-name=*|--function=*)
@@ -40,7 +39,6 @@ function lambda_getenv() {
 }
 
 function kinesis_peek() {
-    stream_name=""
     for arg in "$@"; do
       case $arg in
         --stream-name=*)
@@ -67,21 +65,20 @@ function kinesis_peek() {
 }
 
 function elbv2_describe_target_groups() {
-    function_name=""
     for arg in "$@"; do
       case $arg in
         --load-balancer-name=*)
-          load_balancer_name="${arg#*=}"
+          local load_balancer_name="${arg#*=}"
       esac
     done
 
     if [ -z "${load_balancer_name}" ]; then
         bypass=1 aws_runner ${OPTS} elbv2 describe-target-groups "$@"
     else
-        f_desc=$(aws_runner ${OPTS} elbv2 describe-load-balancers)
+        f_desc=$(aws_runner ${OPTS} elbv2 describe-load-balancer --load-balancer-name=${load_balancer_name})
         _ret=$?; test ${_ret} -ne 0 && return ${_ret}
 
-        arn=$(echo ${f_desc} | jq -rc ".LoadBalancers [] | select(.LoadBalancerName == \""${load_balancer_name}"\") | .LoadBalancerArn")
+        arn=$(echo ${f_desc} | jq -rc ".LoadBalancerArn")
         
         if [ -z "${arn}" ]; then
             echo "An error occurred (ValidationError) when calling the DescribeTargetGroups operation: '$load_balancer_name' is not a valid load balancer name"
@@ -89,6 +86,24 @@ function elbv2_describe_target_groups() {
             bypass=1 aws_runner ${OPTS} elbv2 describe-target-groups --load-balancer-arn=${arn}
         fi
     fi
+}
+
+function elbv2_describe_load_balancer() {
+    for arg in "$@"; do
+      case $arg in
+        --load-balancer-name=*)
+          local load_balancer_name="${arg#*=}"
+      esac
+    done
+
+    if [ -z "${load_balancer_name}" ]; then
+		echo "An error occurred (ValidationError) when calling the DescribeTargetGroups operation: '$load_balancer_name' is not a valid load balancer name"
+    else
+        f_desc=$(aws_runner ${OPTS} elbv2 describe-load-balancers)
+        _ret=$?; test ${_ret} -ne 0 && return ${_ret}
+
+        echo ${f_desc} | jq -rc ".LoadBalancers [] | select(.LoadBalancerName == \""${load_balancer_name}"\")"
+	fi
 }
 
 ## ------------------------ ## 
