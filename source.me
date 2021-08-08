@@ -4,6 +4,7 @@ AWS_EXTENSIONS=(
     "lambda_download"
     "lambda_getenv"
     "kinesis_peek"
+    "elbv2_describe_target_groups"
 )
 
 function lambda_download() {
@@ -61,8 +62,33 @@ function kinesis_peek() {
 
     rtext=$(aws_runner ${OPTS} kinesis get-records --shard-iterator=${iterator} --limit=${limit:-1})
     _ret=$?; test ${_ret} -ne 0 && return ${_ret}
-	blob=$(echo ${rtext} | jq -r ".Records[] | .Data" | base64 -d)
-	echo ${blob}
+    blob=$(echo ${rtext} | jq -r ".Records[] | .Data" | base64 -d)
+    echo ${blob}
+}
+
+function elbv2_describe_target_groups() {
+    function_name=""
+    for arg in "$@"; do
+      case $arg in
+        --load-balancer-name=*)
+          load_balancer_name="${arg#*=}"
+      esac
+    done
+
+    if [ -z "${load_balancer_name}" ]; then
+        bypass=1 aws_runner ${OPTS} elbv2 describe-target-groups "$@"
+    else
+        f_desc=$(aws_runner ${OPTS} elbv2 describe-load-balancers)
+        _ret=$?; test ${_ret} -ne 0 && return ${_ret}
+
+        arn=$(echo ${f_desc} | jq -rc ".LoadBalancers [] | select(.LoadBalancerName == \""${load_balancer_name}"\") | .LoadBalancerArn")
+        
+        if [ -z "${arn}" ]; then
+            echo "An error occurred (ValidationError) when calling the DescribeTargetGroups operation: '$load_balancer_name' is not a valid load balancer name"
+        else
+            bypass=1 aws_runner ${OPTS} elbv2 describe-target-groups --load-balancer-arn=${arn}
+        fi
+    fi
 }
 
 ## ------------------------ ## 
@@ -101,9 +127,11 @@ function aws_runner() {
 
     _argparse "$@"
     shift ${NOPTS}
-    cmd="$1_$2"
+    cmd=$(echo "$1_$2" | sed "s/-/_/g")
 
-    if [[ ($# -ge 2) && ("${AWS_EXTENSIONS[@]}" =~ "${cmd}") ]]; then
+    if [[ -n ${bypass} ]]; then
+        ${AWS} ${OPTS} "$@"
+    elif [[ ($# -ge 2) && ("${AWS_EXTENSIONS[@]}" =~ "${cmd}") ]]; then
         shift 2
         $cmd "$@"
     else

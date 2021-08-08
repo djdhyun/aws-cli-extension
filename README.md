@@ -9,6 +9,7 @@ Add more commands for AWS CLI by two separate ways.
 * [lambda download](#lambda-download)
 * [lambda getenv](#lambda-getenv)
 * [kinesis peek](#kinesis_peek)
+* [elbv2 describe\_target\_groups --load-balancer-name](#elbv2-describe_target_groups---load-balancer-name)
 
 ## Quickstart
 
@@ -93,6 +94,10 @@ AWS="aws --region-name=us-west-1" aws_runner kinesis peek --stream-name=...
 AWS="aws-vault exec my_profile -- aws" aws_runner kinesis peek
 ```
 
+## Dependencies
+
+### `jq` command (Command-line JSON processor)
+* For installation, please refer to https://stedolan.github.io/jq/download/
 
 ## Commands
 
@@ -139,7 +144,15 @@ $ aws_runner kinesis peek --stream-name=your_stream_name --limit=10
 { .. message_fetched_from_the_kinesis_stream .. }
 ```
 
-## Dependencies
 
-### `jq` command (Command-line JSON processor)
-* For installation, please refer to https://stedolan.github.io/jq/download/
+#### elbv2 describe\_target\_groups --load-balancer-name
+
+* Describes the specified target groups by the name of load balancer.
+* Arguments
+	* `--load-balancer-name`: The name of the load balancer
+
+```
+$ aws_runner describe_target_groups --load-balancer-name=your_lb_name
+
+{ "TargetGroups": [{ ... }] }
+```
