@@ -11,6 +11,7 @@ Add more commands for AWS CLI by two separate ways.
 * [kinesis peek](#kinesis_peek)
 * [elbv2 describe\_target\_groups --load-balancer-name](#elbv2-describe_target_groups---load-balancer-name)
 * [elbv2 describe\_load\_balancer --load-balancer-name](#elbv2-describe_load_balancer---load-balancer-name)
+* [elbv2 dnsname --load-balancer-name](#elbv2-dnsname---load-balancer-name)
 
 ## Quickstart
 
@@ -167,4 +168,16 @@ $ aws_runner describe_target_groups --load-balancer-name=your_lb_name
 $ aws_runner describe_target_groups --load-balancer-name=your_lb_name
 
 { "TargetGroups": [{ ... }] }
+```
+
+#### elbv2 dnsname --load-balancer-name
+
+* Print the dns address of a given load balancer name.
+* Arguments
+	* `--load-balancer-name`: The name of a load balancer
+
+```
+$ aws_runner elbv2 dnsname --load-balancer-name=your_lb_name
+
+your.lb.dns.address.com
 ```

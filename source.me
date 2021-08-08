@@ -6,6 +6,7 @@ AWS_EXTENSIONS=(
     "kinesis_peek"
     "elbv2_describe_target_groups"
     "elbv2_describe_load_balancer"
+    "elbv2_dnsname"
 )
 
 function lambda_download() {
@@ -103,6 +104,24 @@ function elbv2_describe_load_balancer() {
         _ret=$?; test ${_ret} -ne 0 && return ${_ret}
 
         echo ${f_desc} | jq -rc ".LoadBalancers [] | select(.LoadBalancerName == \""${load_balancer_name}"\")"
+	fi
+}
+
+function elbv2_dnsname() {
+    for arg in "$@"; do
+      case $arg in
+        --load-balancer-name=*)
+          local load_balancer_name="${arg#*=}"
+      esac
+    done
+
+    if [ -z "${load_balancer_name}" ]; then
+		echo "An error occurred (ValidationError) when calling the DescribeTargetGroups operation: '$load_balancer_name' is not a valid load balancer name"
+    else
+		f_desc=$(aws_runner ${OPTS} elbv2 describe-load-balancer --load-balancer-name=${load_balancer_name})
+		_ret=$?; test ${_ret} -ne 0 && return ${_ret}
+
+        echo ${f_desc} | jq -r ".DNSName"
 	fi
 }
 
