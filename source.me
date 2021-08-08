@@ -1,0 +1,112 @@
+## ------ extensions ------ ## 
+
+AWS_EXTENSIONS=(
+    "lambda_download"
+    "lambda_getenv"
+    "kinesis_peek"
+)
+
+function lambda_download() {
+    function_name=""
+    for arg in "$@"; do
+      case $arg in
+        --function-name=*|--function=*)
+          function_name="${arg#*=}"
+      esac
+    done
+
+    f_desc=$(aws_runner ${OPTS} lambda get-function "$@")
+    _ret=$?; test ${_ret} -ne 0 && return ${_ret}
+
+    curl $(echo ${f_desc} | jq -r '.Code.Location') -o ${function_name}.zip
+    unzip ${function_name}.zip -d ${function_name}
+    rm ${function_name}.zip
+}
+
+function lambda_getenv() {
+    function_name=""
+    for arg in "$@"; do
+      case $arg in
+        --function-name=*|--function=*)
+          function_name="${arg#*=}"
+      esac
+    done
+
+    f_desc=$(aws_runner ${OPTS} lambda get-function-configuration "$@")
+    _ret=$?; test ${_ret} -ne 0 && return ${_ret}
+
+    echo ${f_desc} | jq -r '.Environment.Variables' | sed "s/^[{}[:blank:]]*\S*//g" | sed "s/\"//g" | sed "s/,$//g" | sed "s/: /=/g" | grep -v "^$"
+}
+
+function kinesis_peek() {
+    stream_name=""
+    for arg in "$@"; do
+      case $arg in
+        --stream-name=*)
+          stream_name="${arg#*=}"
+          ;;
+        --limit=*)
+          limit="${arg#*=}"
+          ;;
+      esac
+    done
+
+    rtext=$(aws_runner ${OPTS} kinesis list-shards --stream-name=${stream_name})
+    _ret=$?; test ${_ret} -ne 0 && return ${_ret}
+    shard=$(echo ${rtext} | jq -r '.Shards[0].ShardId')
+
+    rtext=$(aws_runner ${OPTS} kinesis get-shard-iterator --stream-name=${stream_name} --shard-id=${shard} --shard-iterator-type=LATEST)
+    _ret=$?; test ${_ret} -ne 0 && return ${_ret}
+    iterator=$(echo ${rtext} | jq -r '.ShardIterator')
+
+    rtext=$(aws_runner ${OPTS} kinesis get-records --shard-iterator=${iterator} --limit=${limit:-1})
+    _ret=$?; test ${_ret} -ne 0 && return ${_ret}
+	blob=$(echo ${rtext} | jq -r ".Records[] | .Data" | base64 -d)
+	echo ${blob}
+}
+
+## ------------------------ ## 
+
+## -------- runner -------- ## 
+
+OPTS=""
+ARGS=""
+NOPTS=0
+function _argparse() {
+    NOPTS=0
+    is_option=1
+
+    # argparser
+    for arg in "$@"; do
+        if [[ ($is_option == 1) && ($arg == "--"*) ]]; then
+            NOPTS=$((narg+1))
+            if [[ -z ${OPTS} ]]; then
+                OPTS="${arg}"
+            else
+                OPTS="${OPTS} ${arg}"
+            fi
+        else
+            is_option=0
+            if [[ -z ${ARGS} ]]; then
+                ARGS="${arg}"
+            else
+                ARGS="${ARGS} ${arg}"
+            fi
+        fi
+    done
+}
+
+function aws_runner() {
+    AWS="${AWS:-aws}"
+
+    _argparse "$@"
+    shift ${NOPTS}
+    cmd="$1_$2"
+
+    if [[ ($# -ge 2) && ("${AWS_EXTENSIONS[@]}" =~ "${cmd}") ]]; then
+        shift 2
+        $cmd "$@"
+    else
+        ${AWS} ${OPTS} "$@"
+    fi
+}

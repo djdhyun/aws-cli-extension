@@ -1,0 +1,74 @@
+[toplevel]
+whoami = sts get-caller-identity
+
+lambda_download =
+  !f() {
+    function_name=""
+    for arg in "$@"; do
+      case $arg in
+        --function-name=*|--function=*)
+          function_name="${arg#*=}"
+      esac
+    done
+
+    f_desc=$(aws ${AWS_OPTS} lambda get-function "$@")
+    _ret=$?; test ${_ret} -ne 0 && return ${_ret}
+
+    curl $(echo ${f_desc} | jq -r '.Code.Location') -o ${function_name}.zip
+    unzip ${function_name}.zip -d ${function_name}
+    rm ${function_name}.zip
+  }; f
+
+lambda_getenv =
+  !f() {
+    function_name=""
+    for arg in "$@"; do
+      case $arg in
+        --function-name=*|--function=*)
+          function_name="${arg#*=}"
+      esac
+    done
+
+    f_desc=$(aws ${AWS_OPTS} lambda get-function-configuration "$@")
+    _ret=$?; test ${_ret} -ne 0 && return ${_ret}
+
+    echo ${f_desc} | jq -r '.Environment.Variables' | sed "s/^[{}[:blank:]]*\S*//g" | sed "s/\"//g" | sed "s/,$//g" | sed "s/: /=/g" | grep -v "^$"
+  }; f
+
+kinesis_peek =
+  !f() {
+    stream_name=""
+    for arg in "$@"; do
+      case $arg in
+        --stream-name=*|--stream=*)
+          stream_name="${arg#*=}"
+          ;;
+      esac
+    done
+
+    limit=""
+    for arg in "$@"; do
+      case $arg in
+        --limit=*)
+          limit="${arg#*=}"
+          ;;
+      esac
+    done
+
+    rtext=$(aws ${AWS_OPTS} kinesis list-shards --stream-name=${stream_name})
+    _ret=$?; test ${_ret} -ne 0 && return ${_ret}
+    shard=$(echo ${rtext} | jq -r '.Shards[0].ShardId')
+
+    rtext=$(aws ${AWS_OPTS} kinesis get-shard-iterator --stream-name=${stream_name} --shard-id=${shard} --shard-iterator-type=LATEST)
+    _ret=$?; test ${_ret} -ne 0 && return ${_ret}
+    iterator=$(echo ${rtext} | jq -r '.ShardIterator')
+
+    rtext=$(aws ${AWS_OPTS} kinesis get-records --shard-iterator=${iterator} --limit=${limit:-1})
+    _ret=$?; test ${_ret} -ne 0 && return ${_ret}
+    blob=$(echo ${rtext} | jq -r ".Records[] | .Data" | base64 -d)
+
+    for b in $(echo ${rtext} | jq -r ".Records[] | .Data"); do
+        echo $b | base64 -d
+        echo
+    done
+  }; f
