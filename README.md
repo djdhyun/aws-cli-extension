@@ -1,5 +1,5 @@
 # aws-cli-extension
-Add more functions for AWS CLI by two separate ways.
+Add more commands for AWS CLI by two separate ways.
 
 1. by defining aws aliases
 2. by sourcing `aws_runner` script
@@ -69,7 +69,7 @@ aws_runner kinesis peek --stream-name=... --region-name=us-west-1
 
 ## `aws_runner`
 
-* Since it simply just wraps the `aws` cli, you can issue any aws commands by using the function.
+* Since it simply just wraps the `aws` cli, you can issue any aws commands along with corresponding options.
 
 ```
 # What you could do with the original aws cli
@@ -98,9 +98,9 @@ AWS="aws-vault exec my_profile -- aws" aws_runner kinesis peek
 
 #### lambda download
 
-* Download the function code in your device.
+* Download the lambda function code in your device.
 * Arguments
-	* `--function-name |--function`: The name of the lambda function
+	* `--function-name|--function`: The name of the lambda function
 
 ```
 $ aws lambda_download --function-name=your_function_name
@@ -111,9 +111,9 @@ $ ls your_function_name
 
 #### lambda getenv
 
-* Show the running enviroment variables for the function.
+* Show the running enviroment variables for the lambda function.
 * Arguments
-	* `--function-name |--function`: The name of the lambda function
+	* `--function-name|--function`: The name of the lambda function
 
 ```
 $ aws lambda_getenv --function-name=your_function_name
@@ -130,7 +130,7 @@ STAGE=prod
 * Read a sample record from a given kinesis stream.
 * Arguments
 	* `--stream-name|--stream`: The name of the kinesis stream
-	* `--limit`: The number of records to be fetched
+	* `--limit`: The number of records to be fetched (optional, default=1)
 
 ```
 $ aws kinesis_peek --stream-name=your_stream_name --limit=10
