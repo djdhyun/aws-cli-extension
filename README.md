@@ -4,9 +4,15 @@ Add more functions for AWS CLI by two separate ways.
 1. by defining aws aliases
 2. by sourcing `aws_runner` script
 
+### Command List
+
+* [lambda download](#lambda-download)
+* [lambda getenv](#lambda-getenv)
+* [kinesis peek](#kinesis_peek)
+
 ## Quickstart
 
-#### Using AWSCLI Aliases
+### Using AWSCLI Aliases
 
 ```
 $ git clone https://github.com/djdhyun/aws-cli-extension
@@ -16,7 +22,7 @@ $ cp aws-cli-extension/alias ~/.aws/cli/alias
 $ aws kinesis_peek --stream-name=your_stream_name --limit=2
 ```
 
-#### Using `aws_runner`
+### Using `aws_runner`
 
 ```
 $ git clone https://github.com/djdhyun/aws-cli-extension
@@ -133,4 +139,7 @@ $ aws_runner kinesis peek --stream-name=your_stream_name --limit=10
 { .. message_fetched_from_the_kinesis_stream .. }
 ```
 
+## Dependencies
 
+### `jq` command (Command-line JSON processor)
+* For installation, please refer to https://stedolan.github.io/jq/download/
