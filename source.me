@@ -12,7 +12,7 @@ function lambda_download() {
     for arg in "$@"; do
       case $arg in
         --function-name=*|--function=*)
-          function_name="${arg#*=}"
+          local function_name="${arg#*=}"
       esac
     done
 
@@ -29,7 +29,7 @@ function lambda_getenv() {
     for arg in "$@"; do
       case $arg in
         --function-name=*|--function=*)
-          function_name="${arg#*=}"
+          local function_name="${arg#*=}"
       esac
     done
 
@@ -44,10 +44,10 @@ function kinesis_peek() {
     for arg in "$@"; do
       case $arg in
         --stream-name=*)
-          stream_name="${arg#*=}"
+          local stream_name="${arg#*=}"
           ;;
         --limit=*)
-          limit="${arg#*=}"
+          local limit="${arg#*=}"
           ;;
       esac
     done
@@ -95,28 +95,28 @@ function elbv2_describe_target_groups() {
 
 ## -------- runner -------- ## 
 
-OPTS=""
-ARGS=""
-NOPTS=0
+_OPTS=""
+_ARGS=""
+_NOPTS=0
 function _argparse() {
-    NOPTS=0
-    is_option=1
+    _NOPTS=0
+    local is_option=1
 
     # argparser
     for arg in "$@"; do
         if [[ ($is_option == 1) && ($arg == "--"*) ]]; then
-            NOPTS=$((narg+1))
-            if [[ -z ${OPTS} ]]; then
-                OPTS="${arg}"
+            _NOPTS=$((_NOPTS+1))
+            if [[ -z ${_OPTS} ]]; then
+                _OPTS="${arg}"
             else
-                OPTS="${OPTS} ${arg}"
+                _OPTS="${_OPTS} ${arg}"
             fi
         else
             is_option=0
-            if [[ -z ${ARGS} ]]; then
-                ARGS="${arg}"
+            if [[ -z ${_ARGS} ]]; then
+                _ARGS="${arg}"
             else
-                ARGS="${ARGS} ${arg}"
+                _ARGS="${_ARGS} ${arg}"
             fi
         fi
     done
@@ -126,15 +126,15 @@ function aws_runner() {
     AWS="${AWS:-aws}"
 
     _argparse "$@"
-    shift ${NOPTS}
+    shift ${_NOPTS}
     cmd=$(echo "$1_$2" | sed "s/-/_/g")
 
     if [[ -n ${bypass} ]]; then
-        ${AWS} ${OPTS} "$@"
+        ${AWS} ${_OPTS} "$@"
     elif [[ ($# -ge 2) && ("${AWS_EXTENSIONS[@]}" =~ "${cmd}") ]]; then
         shift 2
         $cmd "$@"
     else
-        ${AWS} ${OPTS} "$@"
+        ${AWS} ${_OPTS} "$@"
     fi
 }
