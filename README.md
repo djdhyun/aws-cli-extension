@@ -8,9 +8,9 @@ Add more commands for AWS CLI by two separate ways.
 
 * [lambda download](#lambda-download)
 * [lambda getenv](#lambda-getenv)
-* [s3 peek](#s3_peek)
-* [s3 random cp](#s3_random_cp)
-* [kinesis peek](#kinesis_peek)
+* [s3 peek](#s3-peek)
+* [s3 random cp](#s3-random-cp)
+* [kinesis peek](#kinesis-peek)
 * [elbv2 describe\_target\_groups --load-balancer-name](#elbv2-describe_target_groups---load-balancer-name)
 * [elbv2 describe\_load\_balancer --load-balancer-name](#elbv2-describe_load_balancer---load-balancer-name)
 * [elbv2 dnsname --load-balancer-name](#elbv2-dnsname---load-balancer-name)
