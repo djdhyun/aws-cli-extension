@@ -4,6 +4,8 @@ AWS_EXTENSIONS=(
     "lambda_download"
     "lambda_getenv"
     "kinesis_peek"
+    "s3_peek"
+    "s3_random_cp"
     "elbv2_describe_target_groups"
     "elbv2_describe_load_balancer"
     "elbv2_dnsname"
@@ -65,6 +67,45 @@ function kinesis_peek() {
     echo ${blob}
 }
 
+function s3_peek() {
+    _tmpfile=$(mktemp /tmp/aws-cli-extension.XXXXXX)
+    aws_runner s3 random-cp $1 ${_tmpfile} > /dev/null 2> /dev/null
+
+    if [ -s ${_tmpfile} ]; then
+        gunzip -c ${_tmpfile}
+    fi
+}
+
+function s3_random_cp() {
+    local s3regex="s3:\/\/\\([^\/]*\\)\/\\(.*\\)"
+
+    if [ $# -ge 1 ]; then
+        local mpath=$(echo $1 | sed -e "s/${s3regex}/\1:\2/g")
+        local bucket=${mpath%:*}
+        local prefix=${mpath#*:}
+        local outfile=$2
+    fi
+
+    if [ -n "${bucket}" ] && [ -n "${prefix}" ]; then
+        local rtext=$(aws_runner s3api list-objects --bucket=${bucket} --prefix=${prefix} --max-item=1)
+        _ret=$?; test ${_ret} -ne 0 && return ${_ret}
+        local s3key=$(echo ${rtext} | jq -r '.Contents[0] | .Key')
+
+        if [ -z ${s3key} ] || [ ${s3key} = "null" ]; then
+            return
+        fi
+
+        if [ -z ${outfile} ]; then
+            outfile=${s3key##*/}
+        fi
+
+        aws_runner s3api get-object --bucket=${bucket} --key=${s3key} ${outfile}
+        _ret=$?; test ${_ret} -ne 0 && return ${_ret}
+
+        echo "Downloaded ${outfile}"
+    fi
+}
+
 function elbv2_describe_target_groups() {
     for arg in "$@"; do
       case $arg in
@@ -98,13 +139,13 @@ function elbv2_describe_load_balancer() {
     done
 
     if [ -z "${load_balancer_name}" ]; then
-		echo "An error occurred (ValidationError) when calling the DescribeTargetGroups operation: '$load_balancer_name' is not a valid load balancer name"
+        echo "An error occurred (ValidationError) when calling the DescribeTargetGroups operation: '$load_balancer_name' is not a valid load balancer name"
     else
         f_desc=$(aws_runner ${OPTS} elbv2 describe-load-balancers)
         _ret=$?; test ${_ret} -ne 0 && return ${_ret}
 
         echo ${f_desc} | jq -rc ".LoadBalancers [] | select(.LoadBalancerName == \""${load_balancer_name}"\")"
-	fi
+    fi
 }
 
 function elbv2_dnsname() {
@@ -116,13 +157,13 @@ function elbv2_dnsname() {
     done
 
     if [ -z "${load_balancer_name}" ]; then
-		echo "An error occurred (ValidationError) when calling the DescribeTargetGroups operation: '$load_balancer_name' is not a valid load balancer name"
+        echo "An error occurred (ValidationError) when calling the DescribeTargetGroups operation: '$load_balancer_name' is not a valid load balancer name"
     else
-		f_desc=$(aws_runner ${OPTS} elbv2 describe-load-balancer --load-balancer-name=${load_balancer_name})
-		_ret=$?; test ${_ret} -ne 0 && return ${_ret}
+        f_desc=$(aws_runner ${OPTS} elbv2 describe-load-balancer --load-balancer-name=${load_balancer_name})
+        _ret=$?; test ${_ret} -ne 0 && return ${_ret}
 
         echo ${f_desc} | jq -r ".DNSName"
-	fi
+    fi
 }
 
 ## ------------------------ ## 

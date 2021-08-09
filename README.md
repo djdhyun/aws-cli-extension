@@ -8,6 +8,8 @@ Add more commands for AWS CLI by two separate ways.
 
 * [lambda download](#lambda-download)
 * [lambda getenv](#lambda-getenv)
+* [s3 peek](#s3_peek)
+* [s3 random cp](#s3_random_cp)
 * [kinesis peek](#kinesis_peek)
 * [elbv2 describe\_target\_groups --load-balancer-name](#elbv2-describe_target_groups---load-balancer-name)
 * [elbv2 describe\_load\_balancer --load-balancer-name](#elbv2-describe_load_balancer---load-balancer-name)
@@ -130,6 +132,30 @@ APP_NAME=YOUR_APP_NAME
 API_KEY_CACHE_TTL=180
 STAGE=prod
 ...
+```
+
+#### s3 peek
+
+* Read contents of a sample object that belongs to the given s3 path.
+* Positional Arguments
+	* S3Uri
+
+```
+$ aws_runner s3 peek s3://your_bucket_name/path1/path2
+
+{ .. contents of the object .. }
+```
+
+#### s3 random cp
+
+* Download a sample object that belongs to the given s3 path.
+* Positional Arguments
+	* S3Uri
+    * LocalPath to be downloaded 
+    <br>(optional, default will current path along with the filename of the random object)
+
+```
+$ aws_runner s3 random-cp s3://your_bucket_name/path1/path2 ./your_path/target.gz
 ```
 
 #### kinesis peek
