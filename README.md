@@ -9,10 +9,10 @@ Add more commands for AWS CLI by two separate ways.
 * [lambda download](#lambda-download)
 * [lambda getenv](#lambda-getenv)
 * [s3 peek](#s3-peek)
-* [s3 random cp](#s3-random-cp)
+* [s3 random-cp](#s3-random-cp)
 * [kinesis peek](#kinesis-peek)
-* [elbv2 describe\_target\_groups --load-balancer-name](#elbv2-describe_target_groups---load-balancer-name)
-* [elbv2 describe\_load\_balancer --load-balancer-name](#elbv2-describe_load_balancer---load-balancer-name)
+* [elbv2 describe-target-groups --load-balancer-name](#elbv2-describe-target-groups---load-balancer-name)
+* [elbv2 describe-load-balancer --load-balancer-name](#elbv2-describe-load-balancer---load-balancer-name)
 * [elbv2 dnsname --load-balancer-name](#elbv2-dnsname---load-balancer-name)
 
 ## Quickstart
@@ -146,7 +146,7 @@ $ aws_runner s3 peek s3://your_bucket_name/path1/path2
 { .. contents of the object .. }
 ```
 
-#### s3 random cp
+#### s3 random-cp
 
 * Download a sample object that belongs to the given s3 path.
 * Positional Arguments
@@ -172,7 +172,7 @@ $ aws_runner kinesis peek --stream-name=your_stream_name --limit=10
 { .. message_fetched_from_the_kinesis_stream .. }
 ```
 
-#### elbv2 describe\_load\_balancer --load-balancer-name
+#### elbv2 describe-load-balancer --load-balancer-name
 
 * Describes the specified load balancer by the name of a load balancer.
 * Arguments
@@ -184,7 +184,7 @@ $ aws_runner describe_target_groups --load-balancer-name=your_lb_name
 { "LoadBalancerArn": "...", "DNSName" : "...", .. }
 ```
 
-#### elbv2 describe\_target\_groups --load-balancer-name
+#### elbv2 describe-target-groups --load-balancer-name
 
 * Describes the specified target groups by the name of a load balancer.
 * Arguments
